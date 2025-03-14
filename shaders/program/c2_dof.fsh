@@ -1,10 +1,10 @@
 /*
 --------------------------------------------------------------------------------
 
-  Photon Shader by SixthSurge
+  Photon Shader by SixthSurge (Modified for Far Blur Only)
 
   program/c2_dof
-  Calculate depth of field
+  Calculate depth of field (Far Blur Only)
 
 --------------------------------------------------------------------------------
 */
@@ -22,9 +22,7 @@ in vec2 uv;
 // ------------
 
 uniform sampler2D noisetex;
-
 uniform sampler2D colortex0;
-
 uniform sampler2D depthtex0;
 
 uniform mat4 gbufferModelView;
@@ -73,9 +71,10 @@ void main() {
 	      theta  = r1(frameCounter, theta);
 	      theta *= tau;
 
-	// Calculate circle of confusion
+	// Calculate circle of confusion (CoC) for far blur only
 	float focus = DOF_FOCUS < 0.0 ? centerDepthSmooth : view_to_screen_space_depth(gbufferProjection, DOF_FOCUS);
-	vec2 CoC = min(abs(depth - focus), 0.1) * (DOF_INTENSITY * 0.2 / 1.37) * vec2(1.0, aspectRatio) * gbufferProjection[1][1];
+	float blurAmount = max(depth - focus, 0.0); // Only blur distant objects
+	vec2 CoC = blurAmount * (DOF_INTENSITY * 0.2 / 1.37) * vec2(1.0, aspectRatio) * gbufferProjection[1][1];
 
 	scene_color = vec3(0.0);
 
@@ -86,4 +85,3 @@ void main() {
 
 	scene_color *= rcp(DOF_SAMPLES);
 }
-
